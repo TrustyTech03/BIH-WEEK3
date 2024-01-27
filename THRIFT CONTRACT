@@ -1,0 +1,37 @@
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.18;
+
+contract donation{
+    uint256 totalRevenuesaved;
+    uint256 immutable savingsTarget;
+    address payable immutable  owner;
+    uint256 decimal = 10**18;
+    mapping (address => uint256) individualBalances;
+    constructor( uint256 _donationTarget, address _owner){
+        savingsTarget = _donationTarget*decimal;
+        owner = payable (_owner);
+    }
+    modifier depositrestriction(){
+        require(msg.value > 0," zero deposit is not all0wed");
+        require(totalRevenuesaved <= savingsTarget ,"target restricted");
+        _;
+    }
+    modifier withdrawnalrestrictions(){
+    require(owner == payable (msg.sender), "you are not authorised to make withdrawnal..... ");
+    require(totalRevenuesaved >= savingsTarget  );
+    _;
+    }
+    event alert(address _sender, uint256 _amount);
+   function deposit() external payable depositrestriction{
+     individualBalances[msg.sender] += msg.value;
+    emit alert(msg.sender, msg.value);
+   }
+
+   function withdrawnal()  public withdrawnalrestrictions{
+    emit alert(msg.sender,individualBalances[msg.sender]);
+    owner.transfer(individualBalances[msg.sender]);
+   }
+   function viewBalance() public view returns(uint256) {
+        return individualBalances[msg.sender];
+   } 
+}
