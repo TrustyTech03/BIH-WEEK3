@@ -1,0 +1,36 @@
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.18;
+
+contract ERC20Standard{
+    string tokenName;
+    string tokenSymbol;
+    uint256 immutable tokenTotalSupply;
+    uint256 immutable decimal;
+    mapping(address=>uint256) Balance;
+
+    constructor( string memory _tokenName, string memory _tokenSymbol, uint256 _tokenTotalSupply){
+        tokenName = _tokenName;
+        tokenSymbol = _tokenSymbol;
+        tokenTotalSupply = _tokenTotalSupply;
+        decimal = 10**18;
+        Balance[msg.sender] = _tokenTotalSupply;
+    }
+    event alert(address _deployer, uint256 _amount);
+  
+    function balanceOf(address _user) public returns(uint256) {
+        require(_user != address(0),"no value for zero addresses");
+        emit alert(_user, Balance[_user]);
+        return Balance[_user];
+       
+    }
+    function transfer(address  _to,uint256 _amount) external {
+        require(Balance[msg.sender] >= _amount);
+        Balance[_to] += _amount;
+        Balance[msg.sender] -= _amount;
+        emit alert(msg.sender, _amount);
+    }
+
+
+
+
+}
