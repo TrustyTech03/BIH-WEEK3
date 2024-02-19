@@ -1,0 +1,118 @@
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.8.20;
+import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC721/IERC721.sol";
+contract NFTMARKETPLACE{
+    uint8 public immutable feePercent;
+    uint256 public nftMPId;
+    uint256 public nftmaxId;
+    address payable feePaymentAddr;
+
+
+    mapping(uint256 => NFTassdata) _NFTInfo;
+    struct  NFTassdata{
+       uint256 nftMPId;
+       uint256 nftId;
+       uint256 nftPrice;
+       IERC721 nft;
+       address payable seller;
+       bool sold;
+    }
+    NFTassdata public nftassdata;
+
+    constructor(uint8 _feePercent){
+        feePaymentAddr = payable(msg.sender);
+        feePercent = _feePercent;
+    }
+
+    event listed(
+       uint256 indexed  nftMPId,
+       uint256 nftId,
+       uint256 nftPrice,
+       IERC721 nft,
+       address indexed  seller
+    );
+     event sold(
+       uint256 indexed  nftMPId,
+       uint256 nftId,
+       uint256 nftPrice,
+       IERC721 nft,
+       address indexed  seller
+    );
+
+    function listNFT(IERC721 _nft, uint256 _nftId,uint256 _nftPrice) external  {
+        require(_nftPrice > 0,"invalid price..");
+        _nft.transferFrom(msg.sender, address(this), _nftId);
+
+        nftMPId++;
+
+        _NFTInfo[nftMPId] = NFTassdata(
+            nftMPId,
+            _nftId,
+            _nftPrice,
+            _nft,
+            payable(msg.sender),
+            false
+        );
+
+        emit listed( 
+        nftMPId,
+        _nftId,
+        _nftPrice,
+       _nft,
+        msg.sender
+    );
+    }
+function Purchase(uint256 _nftMPId) external payable
+     {
+       uint256 totalPrice = ((_NFTInfo[_nftMPId].nftPrice*(100 + feePercent))/100);
+       NFTassdata storage itemTOsell = _NFTInfo[_nftMPId];
+       require(msg.value >= msg.sender.balance,"insuficient balance..");
+       require(msg.value >= totalPrice,"insuficient balance..");
+       require(msg.sender != address(0),"zero addresses are not allowed..");
+       require(_nftMPId <=nftmaxId && _nftMPId !=0, "nft does not exist");
+       require( !_NFTInfo[_nftMPId].sold,"already sold");
+       _NFTInfo[_nftMPId].sold = true;
+       itemTOsell.seller.transfer(itemTOsell.nftPrice);
+       feePaymentAddr.transfer(totalPrice - itemTOsell.nftPrice);
+        itemTOsell.nft.transferFrom(address(this), msg.sender, itemTOsell.nftId);
+
+        
+        emit sold( 
+        nftMPId,
+        itemTOsell.nftId,
+        itemTOsell.nftPrice,
+        itemTOsell.nft,
+        msg.sender
+    );    
+    }
+
+    
+
+
+
+
+
+
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
