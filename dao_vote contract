@@ -1,0 +1,59 @@
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.20;
+
+contract voting_system{
+
+    address admin;
+    mapping (address => uint256) _voteCounts;
+
+    address []    acreditedVoters;
+    address []  voted;
+    address []  candidates;
+
+    constructor(){
+        admin = msg.sender;
+    }
+    function candidatesAcreditation(address _candidate) external  returns(string memory){
+        require(msg.sender == admin,"you're not eligible to call this function");
+        candidates.push(_candidate);
+        return "candidate successfully added";
+    }
+    function acreditation(address _applicantAddress) external  {
+        require(msg.sender == admin,"you're not eligible to call this function");
+        acreditedVoters.push(_applicantAddress);
+    }
+
+    function checkAcreditation(address _address) internal  view returns(bool){
+        for(uint256 i=0; _address != acreditedVoters[i] && i <= acreditedVoters.length-1; i++){
+            if(_address == acreditedVoters[i]){
+                return true;
+            }
+        }
+        return false;
+    }
+    function checkcandidates(address _address) internal  view returns(bool){
+        for(uint256 i=0; _address != candidates[i] && i <= candidates.length-1; i++){
+            if(_address == candidates[i]){
+                return true;
+            }
+        }
+        return false;
+    }
+    function checkvoted(address _address) internal  view returns(bool){
+        for(uint256 i=0; _address != voted[i] && i <= voted.length-1; i++){
+            if(_address == voted[i]){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function voteCanditate(address _candidateAddress) public returns(string memory){
+        require(checkAcreditation(msg.sender) && !checkvoted(msg.sender));
+        require(checkcandidates(_candidateAddress)," the input address is not a candidate");
+        _voteCounts[_candidateAddress]++;
+        voted.push(msg.sender);
+        return "you've successfully voted";
+    }  
+    
+}
